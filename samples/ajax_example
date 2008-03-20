@@ -11,7 +11,7 @@ BS::HTTPD::Appgets::set_appsrv ($httpd);
 
 $httpd->reg_cb (
    _ => sub {
-      my ($httpd, $url, $content, $headers) = @_;
+      my ($httpd, $url, $headers) = @_;
 
       o ("<html>");
       js ($BS::HTTPD::Appgets::JSON_JS);
@@ -37,7 +37,7 @@ JS
       () # !
    },
    _test => sub {
-      my ($httpd, $url, $content, $headers) = @_;
+      my ($httpd, $url, $headers) = @_;
       my $input = decode_json ($httpd->request_input ());
       $input->{input_content} =~ y/A-Za-z/N-ZA-Mn-za-m/;
       o (encode_json ({output_rot13 => $input->{input_content}}));

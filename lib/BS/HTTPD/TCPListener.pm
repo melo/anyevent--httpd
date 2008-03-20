@@ -81,7 +81,7 @@ sub handle_client {
    my ($chost, $cport) = ($cl->peerhost (), $cl->peerport ());
    my $lid = "$chost:$cport";
 
-   my $cl = $self->spawn_connection ($cl, $chost, $cport);
+   $cl = $self->spawn_connection ($cl, $chost, $cport);
    $self->{clients}->{"$cl"} = $cl;
    $self->event (connect => $cl);
    $cl->start_reader;

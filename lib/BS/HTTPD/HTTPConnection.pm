@@ -67,6 +67,7 @@ sub response {
    my ($self, $code, $msg, $hdr, $content) = @_;
    my $res = "HTTP/1.1 $code $msg\015\012";
    $hdr->{'Expires'} = $hdr->{'Date'} = time2str time;
+   $hdr->{'Cache-Control'} = "max-age=0";
 
    if ($hdr->{'Transfer-Encoding'} eq 'chunked') {
       $self->{chunked} = 1;

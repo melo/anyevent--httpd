@@ -28,7 +28,7 @@ our $VERSION = '0.01';
 
     $httpd->reg_cb (
        _ => sub {
-          my ($httpd, $url, $content, $headers) = @_;
+          my ($httpd, $url, $headers) = @_;
 
           $httpd->o ("<html><body><h1>Hello World!</h1>");
           $httpd->o ("<a href=\"/test\">another test page</a>");
@@ -36,7 +36,7 @@ our $VERSION = '0.01';
           () # !
        },
        _test => sub {
-          my ($httpd, $url, $content, $headers) = @_;
+          my ($httpd, $url, $headers) = @_;
 
           $httpd->o ("<html><body><h1>Test page</h1>");
           $httpd->o ("<a href=\"/\">Back to the main page</a>");
@@ -78,6 +78,16 @@ L<BS::HTTPD> even comes with some basic AJAX framework/helper.
 =item * support for chunked encoding output to the HTTP client
 
 =back
+
+=head1 METHODS
+
+The L<BS::HTTPD> class inherits directly from L<BS::HTTPD::HTTPServer>
+which inherits the event callback interface from L<BS::Event>.
+
+Event callbacks can be registered via the L<BS::Event> API (see the documentation
+of L<BS::Event> for details).
+
+For a list of available events see below in the I<EVENTS> section.
 
 =cut
 
@@ -215,7 +225,7 @@ sub handle_app_req {
 
    $self->{cur_url}  = $url;
    $self->{cur_parm} = ref $cont ? $cont : {};
-   $self->{cur_input} = ref $cont ? "" : $cont;
+   $self->{cur_input} = ref $cont ? undef : $cont;
    $self->{output}   = '';
 
    my $id = $self->parm ('_APP_SRV_FORM_ID');
@@ -240,7 +250,8 @@ sub handle_app_req {
    my (@segs) = $url->path_segments;
    my $ev = join "_", @segs;
 
-   my @res = $self->event ($ev => $url, $cont, $hdr);
+   my @res = $self->event ('request' => $url, $hdr);
+   push @res, $self->event ($ev => $url, $hdr);
 
    for (@res) {
       if (ref $_ eq 'ARRAY') {
@@ -259,6 +270,7 @@ sub handle_app_req {
                $h->{content}->[1]
             ];
          }
+         last;
       }
    }
 
@@ -267,6 +279,83 @@ sub handle_app_req {
    }
 }
 
+=head1 EVENTS
+
+Every request goes to a specific URL. After a (GET or POST) request is
+received the URL is split at the '/' characters and joined again with '_' characters.
+After that the event with the name of the converted URL is invoked, this means that
+if you get a request to the url '/test/bla' the even C<_test_bla> is emitted,
+you can register a callback for that URL like this:
+
+   $httpd->reg_cb (
+      _test_bla => sub {
+         my ($httpd, $url, $headers) = @_;
+
+         # ...
+
+         [200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]
+      }
+   );
+
+The first argument to such a callback is always the L<BS::HTTPD> object itself.
+The second argument (C<$url>) is the L<URI::URL> object of the request URL, the
+third argument (C<$headers>) are the HTTP headers as hashreference of array
+references.
+
+Also every request also emits the C<request> event, with the same arguments and semantics,
+you can use this to implement your own request multiplexing.
+
+The return value of these event callbacks are searched for array or hash references.
+The first callback that returned some response (a non-empty list) determines what
+the server will respond to the HTTP useragent.
+
+If the return value was an array reference it's elements have the following semantics:
+
+   my ($code, $message, $header_hash, $content) =
+         [200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]
+
+If the return value was a hash reference it the hash is first searched for the C<redirect>
+key and if that key does not exist for the C<content> key.
+
+The value for the C<redirect> key should contain the URL that you want to redirect
+the request to.
+
+The value for the C<content> key should contain an array reference with the first
+value being the content type and the second the content.
+
+Here is an example:
+
+   $httpd->reg_cb (
+      _image_elmex => sub {
+         my ($httpd, $url, $headers) = @_;
+
+         open IMG, "$ENV{HOME}/media/images/elmex.png"
+            or return [404, 'not found', { 'Content-Type' => 'text/plain' }, 'not found'];
+
+         { content => ['image/png', do { local $/; <IMG> }] }
+      }
+   );
+
+Alternatively you can fill the response via the C<o> method which will append
+any strings it gets as argument to the response. The content type of a
+response constructed by C<o> will be C<text/html>.
+
+=head1 REQUEST INPUT
+
+If you would like to access the transmitted content you can call the C<request_input>
+method or use the C<parm> method to access the via multipart of urlencoded transmitted
+parameters.
+
+If the C<request_input> method returns undef you know that only parameters have been
+passed by the request.
+
+=head1 CACHING
+
+Any response from the HTTP server will have C<Cache-Control> set to C<max-age=0> and
+also the C<Expires> header set to the C<Date> header. Meaning: Caching is disabled.
+
+If you need caching or would like to have it you can send me a mail or even
+better: a patch :)
 
 =head1 AUTHOR
 
