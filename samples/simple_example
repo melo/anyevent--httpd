@@ -1,0 +1,28 @@
+#!/opt/perl/bin/perl
+use AnyEvent;
+use BS::HTTPD;
+
+my $cvar = AnyEvent->condvar;
+
+my $httpd = BS::HTTPD->new (port => 9090);
+
+$httpd->reg_cb (
+   _ => sub {
+      my ($httpd, $url, $content, $headers) = @_;
+
+      $httpd->o ("<html><body><h1>Hello World!</h1>");
+      $httpd->o ("<a href=\"/test\">another test page</a>");
+      $httpd->o ("</body></html>");
+      () # !
+   },
+   _test => sub {
+      my ($httpd, $url, $content, $headers) = @_;
+
+      $httpd->o ("<html><body><h1>Test page</h1>");
+      $httpd->o ("<a href=\"/\">Back to the main page</a>");
+      $httpd->o ("</body></html>");
+      () # !
+   },
+);
+
+$cvar->wait;
