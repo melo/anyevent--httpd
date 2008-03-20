@@ -1,0 +1,48 @@
+#!/opt/perl/bin/perl
+use AnyEvent;
+use JSON;
+use BS::HTTPD;
+use BS::HTTPD::Appgets /./;
+
+my $cvar = AnyEvent->condvar;
+
+my $httpd = BS::HTTPD->new (port => 9090);
+BS::HTTPD::Appgets::set_appsrv ($httpd);
+
+$httpd->reg_cb (
+   _ => sub {
+      my ($httpd, $url, $content, $headers) = @_;
+
+      o ("<html>");
+      js ($BS::HTTPD::Appgets::JSON_JS);
+      js_ajaxobj_func ("newajax");
+      o ("<body><h1>An AJAX example</h1>");
+      js (<<'JS');
+         function apply_content (aj, content) {
+            var val = eval ("(" + content + ")");
+            document.getElementById ("output").innerHTML = val.output_rot13;
+         }
+         function poll_backend () {
+            var aj = newajax (apply_content);
+            aj.open ("POST", "/test", true);
+            aj.send (JSON.stringify ({
+               "input_content":document.getElementById ("testinput").value
+            }));
+         }
+JS
+      o ('<form><input id="testinput" type="text" name="rot13code" /></form><br />');
+      o ('<a style="background: black; color: white;" onclick="poll_backend ();">Click Here to convert to rot13</a><br /><br />');
+      o ('rot13 output: <div style="border: 4px solid red;" id="output"></div>');
+      o ("</body></html>");
+      () # !
+   },
+   _test => sub {
+      my ($httpd, $url, $content, $headers) = @_;
+      my $input = decode_json ($httpd->request_input ());
+      $input->{input_content} =~ y/A-Za-z/N-ZA-Mn-za-m/;
+      o (encode_json ({output_rot13 => $input->{input_content}}));
+      () # !
+   },
+);
+
+$cvar->wait;
