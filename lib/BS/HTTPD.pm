@@ -3,6 +3,7 @@ use feature ':5.10';
 use strict;
 no warnings;
 
+use Scalar::Util qw/weaken/;
 use URI;
 use BS::HTTPD::HTTPServer;
 
@@ -89,6 +90,8 @@ of L<BS::Event> for details).
 
 For a list of available events see below in the I<EVENTS> section.
 
+=over 4
+
 =cut
 
 sub new {
@@ -115,15 +118,10 @@ sub new {
 
                if ($meth eq 'GET' or $meth eq 'POST') {
 
-                  $self->handle_app_req ($url, $hdr, $cont);
-
-                  if (not defined $self->{response}) {
-                     $con->response (404, "not found",
-                        { 'Content-Type' => 'text/html' },
-                        "<h1>NO CONTENT PROVIDED BY APP! REPORT TO DEVELOPER!</h1>");
-                  } else {
-                     $con->response (@{delete $self->{response}});
-                  }
+                  weaken $con;
+                  $self->handle_app_req ($url, $hdr, $cont, sub {
+                     $con->response (@_) if $con;
+                  });
                } else {
                   $con->response (200, "ok");
                }
@@ -221,11 +219,12 @@ sub request_input {
 sub o { shift->{output} .= join '', @_ }
 
 sub handle_app_req {
-   my ($self, $url, $hdr, $cont) = @_;
+   my ($self, $url, $hdr, $cont, $respcb) = @_;
 
    $self->{cur_url}  = $url;
    $self->{cur_parm} = ref $cont ? $cont : {};
    $self->{cur_input} = ref $cont ? undef : $cont;
+   $self->{cur_res_cb} = sub { $self->respond ($respcb, @_) };
    $self->{output}   = '';
 
    my $id = $self->parm ('_APP_SRV_FORM_ID');
@@ -250,34 +249,66 @@ sub handle_app_req {
    my (@segs) = $url->path_segments;
    my $ev = join "_", @segs;
 
-   my @res = $self->event ('request' => $url, $hdr);
+   my @res = $self->event ('request' => $url, $hdr, $self->{cur_res_cb});
    push @res, $self->event ($ev => $url, $hdr);
+   $self->respond ($respcb, @res);
+}
+
+
+=item B<response_handle ()>
+
+Returns the current response callback. Which is also given as C<$respcb>
+argument to the current event. See also I<EVENTS> below.
+
+=cut
+
+sub response_handle {
+   my ($self) = @_;
+   $self->{cur_res_cb}
+}
+
+sub respond {
+   my ($self, $rescb, @res) = @_;
+
+   my $res;
 
    for (@res) {
       if (ref $_ eq 'ARRAY') {
-         $self->{response} = $_;
+         $res = $_;
          last;
+
       } elsif (ref $_ eq 'HASH') {
          my $h = $_;
          if ($h->{redirect}) {
-            $self->{response} = [
+            $res = [
                301, 'redirected', { Location => $h->{redirect} },
                "Redirected to <a href=\"$h->{redirect}\">here</a>"
             ];
          } elsif ($h->{content}) {
-            $self->{response} = [
+            $res = [
                200, 'ok', { 'Content-Type' => $h->{content}->[0] },
                $h->{content}->[1]
             ];
          }
          last;
+
+      } elsif ($_ eq 'delay') {
+         return; # XXX!
       }
    }
 
-   unless ($self->{response}) {
-      $self->{response} = [200, "ok", { 'Content-Type' => 'text/html' }, $self->{output}];
+   if (not defined $res) {
+      if ($self->{output} eq '') {
+         $rescb->(404, "ok", { 'Content-Type' => 'text/html' }, "<h1>No content</h1>");
+      } else {
+         $rescb->(200, "ok", { 'Content-Type' => 'text/html' }, $self->{output});
+      }
+   } else {
+      $rescb->(@$res);
    }
 }
+
+=back
 
 =head1 EVENTS
 
@@ -289,7 +320,7 @@ you can register a callback for that URL like this:
 
    $httpd->reg_cb (
       _test_bla => sub {
-         my ($httpd, $url, $headers) = @_;
+         my ($httpd, $url, $headers, $respcb) = @_;
 
          # ...
 
@@ -301,6 +332,12 @@ The first argument to such a callback is always the L<BS::HTTPD> object itself.
 The second argument (C<$url>) is the L<URI::URL> object of the request URL, the
 third argument (C<$headers>) are the HTTP headers as hashreference of array
 references.
+
+The C<$respcb> argument is a callback that you can call with the values that
+you would normally return from the callback. It will then generate a response
+and send it back as response to the request. Take care that you return the
+string C<'delay'> from the event if you want to handle it later.
+See also the C<delayed_example> in the C<samples/> directory.
 
 Also every request also emits the C<request> event, with the same arguments and semantics,
 you can use this to implement your own request multiplexing.

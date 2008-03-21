@@ -1,5 +1,9 @@
 Revision history for BS-HTTPD
 
-0.01    Date/time
-        First version, released on an unsuspecting world.
+
+0.02
+	- made it possible to respond to requests asynchronously in C<BS::HTTPD>.
+
+0.01
+	- first preliminary release
 
