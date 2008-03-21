@@ -15,3 +15,5 @@ samples/ajax_example
 samples/bshttp.png
 samples/second_example
 samples/delayed_example
+samples/capture_example
+samples/more_complex_example

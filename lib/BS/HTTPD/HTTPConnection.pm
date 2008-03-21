@@ -162,14 +162,14 @@ sub decode_multipart {
 
    while ($cont =~ s/
       ^--\Q$boundary\E              \015\012
-      (?<header> (?:.*?\015\012)* ) \015\012
+      (?<header> (?:[^\015\012]+\015\012)* ) \015\012
       (?<cont>.*?) \015\012
       (--\Q$boundary\E (?<end>--)?  \015\012)
       /\3/xs) {
       my ($h, $c, $e) = ($+{header}, $+{cont}, $+{end});
 
       if (my (@p) = $self->decode_part ($h, $c)) {
-         push @{$parts->{$p[0]}}, [$p[1], $p[2]];
+         push @{$parts->{$p[0]}}, [$p[1], $p[2], $p[3]];
       }
 
       last if $e eq '--';

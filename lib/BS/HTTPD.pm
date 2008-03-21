@@ -179,7 +179,7 @@ sub form {
    my $url = $self->url;
    '<form action="'.$url.'" method="POST" enctype="multipart/form-data">'
    .'<input type="hidden" name="_APP_SRV_FORM_ID" value="'.$self->{form_id}.'" />'
-   .$cont->()
+   .(ref $cont ? $cont->() : $cont)
    .'</form>'
 }
 
@@ -250,7 +250,7 @@ sub handle_app_req {
    my $ev = join "_", @segs;
 
    my @res = $self->event ('request' => $url, $hdr, $self->{cur_res_cb});
-   push @res, $self->event ($ev => $url, $hdr);
+   push @res, $self->event ($ev => $url, $hdr, $self->{cur_res_cb});
    $self->respond ($respcb, @res);
 }
 

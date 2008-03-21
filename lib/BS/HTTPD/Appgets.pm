@@ -2,23 +2,94 @@ package BS::HTTPD::Appgets;
 use feature ':5.10';
 use strict;
 no warnings;
-use CGI qw/escapeHTML/;
 
 require Exporter;
 
 our @ISA = qw/Exporter/;
 
-our @EXPORT = qw/o alink abutton set_appsrv js js_ajaxobj_func/;
+our @EXPORT = qw/o alink abutton set_output set_httpd js js_ajaxobj_func capture form/;
 
-our $APPSRV;
+=head1 NAME
 
-sub set_appsrv { $APPSRV = $_[0] }
+BS::HTTPD::Appgets - Some utility functions for web applications
+
+=head1 EXPORTS
+
+This module mostly exports these functions:
+
+=over 4
+
+=cut
+
+our $OUT;
+our $HTTPD;
+
+=item B<set_output ($ref)>
+
+This function sets the current reference the output generated
+by the functions this module provides is appended to.
+
+If C<$ref> is a scalar reference. Functions like C<BS::HTTPD::Appgets::o>
+will append their arguments to it.
+
+If C<$ref> is a callback any output is passe as first argument to the callback.
+
+You could for example use this to tie a L<BS::HTTPD> directly to the
+output:
+
+   set_output (sub { $httpd->o (@_) });
+
+=cut
+
+sub set_output { $OUT = $_[0] }
+
+sub set_httpd { $HTTPD = $_[0] }
+
+=item B<capture ($block)>
+
+C<capture> temporarily redirects the output done in C<$block> and returns it.
+
+This function should be called with a block as argument like this:
+
+   my $r = capture {
+      o ("<html><body>Hi</body></html>")
+   }
+
+The return value will be simply the concationated output as it would be sent to the
+callback or appended to the reference given to C<set_output>.
+
+=cut
+
+sub capture(&@) {
+   my ($blk) = @_;
+   my $old = $OUT;
+   my $out;
+   $OUT = sub { $out .= $_[0] };
+   $blk->();
+   $OUT = $old;
+   return $out;
+}
+
+sub form(&;@) {
+   my ($blk, $formcb) = @_;
+   my $f = capture { $blk->() };
+   o ($HTTPD->form ($f, $formcb));
+}
+
+sub o(*;@) {
+   if (ref $OUT eq 'CODE') {
+      $OUT->(join '', @_);
+   } else {
+      $$OUT .= join '', @_;
+   }
+}
 
 sub js {
    o ("<script type=\"text/javascript\">\n");
    o (@_);
    o ("</script>\n");
 }
+
 sub js_ajaxobj_func {
    my ($funcname) = @_;
    js (<<AJAXFUNC);
@@ -45,26 +116,26 @@ function $funcname (content_cb) {
 }
 AJAXFUNC
 }
-sub o { $APPSRV->o (@_) }
-sub alink {
-   my ($lbl, @args) = @_;
-   $APPSRV->o ($APPSRV->link ($lbl, @args))
-}
 
-sub abutton {
-   my ($lbl, @args) = @_;
-   my %as;
-   if (ref $args[0] eq 'HASH') {
-      %as = %{shift @args};
-   }
-   my $opt;
-   if (defined $as{"onclick"}) {
-      $opt = 'onclick="'.escapeHTML ($as{"onclick"}).'"';
-   }
-   $APPSRV->o ($APPSRV->form (sub {
-      '<input type="submit" '.$opt.' value="'.escapeHTML ($lbl).'" />'
-   }, @args));
-}
+=back
+
+=head1 VARIABLES
+
+=over 4
+
+=item B<$BS::HTTPD::Appgets::JSON_JS>
+
+This variable contains the javascript source of the JSON serializer
+and deserializer described in L<http://www.JSON.org/js.html>.
+
+You can use this in your application by for example output it via the C<js> function
+like this:
+
+   js ($BS::HTTPD::Appgets::JSON_JS);
+
+=back
+
+=cut
 
 our $JSON_JS = <<'JSON_JS_CODE';
 /*

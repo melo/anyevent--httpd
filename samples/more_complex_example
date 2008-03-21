@@ -1,0 +1,42 @@
+#!/opt/perl/bin/perl
+use AnyEvent;
+use BS::HTTPD;
+use BS::HTTPD::Appgets;
+use CGI qw/escapeHTML/;
+
+my $cvar = AnyEvent->condvar;
+
+my $httpd = BS::HTTPD->new (port => 9090);
+
+my @list = qw/Apples <this> Other things/;
+
+$httpd->reg_cb (
+   _ => sub {
+      my ($httpd, $url, $headers) = @_;
+      set_output (sub { $httpd->o (@_) });
+      set_httpd ($httpd);
+
+      o ("<html><body><h1>Editable list:</h1>");
+
+      o "<ul>";
+      for my $cur (@list) {
+         my $c = $cur;
+         my $lnk = $httpd->link ("[delete]", sub { @list = grep { $c ne $_ } @list; });
+         o ("<li>".escapeHTML ($c)." ".$lnk."</li>");
+      }
+      o "</ul>";
+
+      form {
+         o '<input type="text" name="newel" /><input type="submit" value="append"/>'
+      } sub {
+        my ($httpd) = @_;
+         push @list, $httpd->parm ("newel");
+      };
+
+      o "</body></html>";
+
+      () # !
+   }
+);
+
+$cvar->wait;
