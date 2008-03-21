@@ -8,18 +8,19 @@ my $httpd = BS::HTTPD->new (port => 9090);
 
 $httpd->reg_cb (
    _ => sub {
-      my ($httpd, $url, $headers) = @_;
+      my ($httpd, $req) = @_;
 
-      $httpd->o ("<html><body><h1>Testing return types...</h1>");
-      $httpd->o ("<img src=\"/image/bshttp.png\" />");
-      $httpd->o ("</body></html>");
-
-      () # !
+      $req->o ("<html><body><h1>Testing return types...</h1>");
+      $req->o ("<img src=\"/image/bshttp.png\" />");
+      $req->o ("</body></html>");
+      $req->respond;
    },
    '_image_bshttp.png' => sub {
       open IMG, 'bshttp.png'
-         or return [404, 'not found', { 'Content-Type' => 'text/plain' }, 'Fail!'];
-      { content => [ 'image/png', do { local $/; <IMG> } ] }
+         or do { $_[1]->respond (
+                    [404, 'not found', { 'Content-Type' => 'text/plain' }, 'Fail!']);
+                    return };
+      $_[1]->respond ({ content => [ 'image/png', do { local $/; <IMG> } ] });
    },
 );
 

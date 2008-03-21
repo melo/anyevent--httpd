@@ -6,6 +6,7 @@ no warnings;
 use Scalar::Util qw/weaken/;
 use URI;
 use BS::HTTPD::HTTPServer;
+use BS::HTTPD::Request;
 
 our @ISA = qw/BS::HTTPD::HTTPServer/;
 
@@ -29,20 +30,20 @@ our $VERSION = '0.01';
 
     $httpd->reg_cb (
        _ => sub {
-          my ($httpd, $url, $headers) = @_;
+          my ($httpd, $req) = @_;
 
-          $httpd->o ("<html><body><h1>Hello World!</h1>");
-          $httpd->o ("<a href=\"/test\">another test page</a>");
-          $httpd->o ("</body></html>");
-          () # !
+          $req->o ("<html><body><h1>Hello World!</h1>");
+          $req->o ("<a href=\"/test\">another test page</a>");
+          $req->o ("</body></html>");
+          $req->respond;
        },
        _test => sub {
-          my ($httpd, $url, $headers) = @_;
+          my ($httpd, $req) = @_;
 
-          $httpd->o ("<html><body><h1>Test page</h1>");
-          $httpd->o ("<a href=\"/\">Back to the main page</a>");
-          $httpd->o ("</body></html>");
-          () # !
+          $req->o ("<html><body><h1>Test page</h1>");
+          $req->o ("<a href=\"/\">Back to the main page</a>");
+          $req->o ("</body></html>");
+          $req->respond;
        },
     );
 
@@ -171,141 +172,38 @@ sub alloc_id {
    $self->{form_id}++;
    $self->{form_cbs}->{"$self->{form_id}"} = [$dest, \@args];
    push @{$self->{form_ages}}, [time, $self->{form_id}];
+   $self->{form_id}
 }
-
-sub form {
-   my ($self, $cont, $dest, @args) = @_;
-   $self->alloc_id ($dest, @args);
-   my $url = $self->url;
-   '<form action="'.$url.'" method="POST" enctype="multipart/form-data">'
-   .'<input type="hidden" name="_APP_SRV_FORM_ID" value="'.$self->{form_id}.'" />'
-   .(ref $cont ? $cont->() : $cont)
-   .'</form>'
-}
-
-sub url {
-   my ($self) = @_;
-   my $url = $self->{cur_url};
-   my $u = URI->new ($url);
-   $u->query (undef);
-   $u
-}
-
-sub link {
-   my ($self, $lbl, $dest, $newurl) = @_;
-   $self->alloc_id ($dest);
-   $newurl //= $self->url;
-   '<a href="'.$newurl.'?a='.$self->{form_id}.'">'.$lbl.'</a>';
-}
-
-sub state {
-   my ($self) = @_;
-   $self->{state}
-}
-
-sub parm {
-   my ($self, $key) = @_;
-   if (exists $self->{cur_parm}->{$key}) {
-      return $self->{cur_parm}->{$key}->[0]->[0]
-   }
-   return undef;
-}
-
-sub request_input {
-   my ($self) = @_;
-   return $self->{cur_input};
-}
-
-sub o { shift->{output} .= join '', @_ }
 
 sub handle_app_req {
    my ($self, $url, $hdr, $cont, $respcb) = @_;
 
-   $self->{cur_url}  = $url;
-   $self->{cur_parm} = ref $cont ? $cont : {};
-   $self->{cur_input} = ref $cont ? undef : $cont;
-   $self->{cur_res_cb} = sub { $self->respond ($respcb, @_) };
-   $self->{output}   = '';
+   weaken $self;
 
-   my $id = $self->parm ('_APP_SRV_FORM_ID');
-   $id = $self->parm ('a') if defined $self->parm ('a');
+   my $req =
+      BS::HTTPD::Request->new (
+         httpd => $self,
+         url   => $url,
+         hdr   => $hdr,
+         parm  => (ref $cont ? $cont : {}),
+         input => (ref $cont ? undef : $cont),
+         resp  => $respcb
+      );
 
-   if ($id) {
+   if ($req->is_form_submit) {
+      my $id = $req->form_id;
       my $cb = $self->{form_cbs}->{"$id"};
-      if (ref $cb->[0] eq 'ARRAY') {
-         while (@{$cb->[0]}) {
-            my ($ref, $val) = (shift @{$cb->[0]}, shift @{$cb->[0]});
-            $$ref = $val;
-         }
 
-      } elsif (ref $cb->[0]) {
-         $cb->[0]->($self, @{$cb->[1] || []}) if $cb;
-
-      } else {
-         $self->event ($cb->[0] => @{$cb->[1] || []})
+      if (ref $cb->[0] eq 'CODE') {
+         $cb->[0]->($req);
       }
    }
 
    my (@segs) = $url->path_segments;
    my $ev = join "_", @segs;
 
-   my @res = $self->event ('request' => $url, $hdr, $self->{cur_res_cb});
-   push @res, $self->event ($ev => $url, $hdr, $self->{cur_res_cb});
-   $self->respond ($respcb, @res);
-}
-
-
-=item B<response_handle ()>
-
-Returns the current response callback. Which is also given as C<$respcb>
-argument to the current event. See also I<EVENTS> below.
-
-=cut
-
-sub response_handle {
-   my ($self) = @_;
-   $self->{cur_res_cb}
-}
-
-sub respond {
-   my ($self, $rescb, @res) = @_;
-
-   my $res;
-
-   for (@res) {
-      if (ref $_ eq 'ARRAY') {
-         $res = $_;
-         last;
-
-      } elsif (ref $_ eq 'HASH') {
-         my $h = $_;
-         if ($h->{redirect}) {
-            $res = [
-               301, 'redirected', { Location => $h->{redirect} },
-               "Redirected to <a href=\"$h->{redirect}\">here</a>"
-            ];
-         } elsif ($h->{content}) {
-            $res = [
-               200, 'ok', { 'Content-Type' => $h->{content}->[0] },
-               $h->{content}->[1]
-            ];
-         }
-         last;
-
-      } elsif ($_ eq 'delay') {
-         return; # XXX!
-      }
-   }
-
-   if (not defined $res) {
-      if ($self->{output} eq '') {
-         $rescb->(404, "ok", { 'Content-Type' => 'text/html' }, "<h1>No content</h1>");
-      } else {
-         $rescb->(200, "ok", { 'Content-Type' => 'text/html' }, $self->{output});
-      }
-   } else {
-      $rescb->(@$res);
-   }
+   my @res = $self->event ('request' => $req);
+   push @res, $self->event ($ev => $req);
 }
 
 =back
@@ -348,43 +246,9 @@ the server will respond to the HTTP useragent.
 
 If the return value was an array reference it's elements have the following semantics:
 
-   my ($code, $message, $header_hash, $content) =
-         [200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]
-
-If the return value was a hash reference it the hash is first searched for the C<redirect>
-key and if that key does not exist for the C<content> key.
-
-The value for the C<redirect> key should contain the URL that you want to redirect
-the request to.
-
-The value for the C<content> key should contain an array reference with the first
-value being the content type and the second the content.
-
-Here is an example:
-
-   $httpd->reg_cb (
-      _image_elmex => sub {
-         my ($httpd, $url, $headers) = @_;
-
-         open IMG, "$ENV{HOME}/media/images/elmex.png"
-            or return [404, 'not found', { 'Content-Type' => 'text/plain' }, 'not found'];
-
-         { content => ['image/png', do { local $/; <IMG> }] }
-      }
-   );
-
 Alternatively you can fill the response via the C<o> method which will append
 any strings it gets as argument to the response. The content type of a
 response constructed by C<o> will be C<text/html>.
-
-=head1 REQUEST INPUT
-
-If you would like to access the transmitted content you can call the C<request_input>
-method or use the C<parm> method to access the via multipart of urlencoded transmitted
-parameters.
-
-If the C<request_input> method returns undef you know that only parameters have been
-passed by the request.
 
 =head1 CACHING
 

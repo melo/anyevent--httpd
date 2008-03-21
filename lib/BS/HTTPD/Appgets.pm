@@ -2,12 +2,13 @@ package BS::HTTPD::Appgets;
 use feature ':5.10';
 use strict;
 no warnings;
+use CGI qw/escapeHTML/;
 
 require Exporter;
 
 our @ISA = qw/Exporter/;
 
-our @EXPORT = qw/o alink abutton set_output set_httpd js js_ajaxobj_func capture form/;
+our @EXPORT = qw/o alink abutton set_output set_httpd js js_ajaxobj_func capture form entry/;
 
 =head1 NAME
 
@@ -43,6 +44,13 @@ output:
 
 sub set_output { $OUT = $_[0] }
 
+=item B<set_httpd ($httpd)>
+
+This function sets the current L<BS::HTTPD> object that should be used
+to genereate forms via the C<form> function. See also the C<form> function below.
+
+=cut
+
 sub set_httpd { $HTTPD = $_[0] }
 
 =item B<capture ($block)>
@@ -70,10 +78,45 @@ sub capture(&@) {
    return $out;
 }
 
+our $curform;
+
+=item B<form ($block, $callback)>
+
+This function will generate a html form for you, which you can fill
+with your own input elements. The C<$callback> will be called when the next
+request is handled and if the form was submitted. It will be executed before any
+of your content callbacks are run.
+The C<form> function has a special prototype which allows this syntax:
+
+   my $new_element;
+   form {
+      entry (\$new_element);
+      o '<input type="submit" value="append"/>'
+   } sub {
+      push @list, $new_element;
+   };
+
+This function is just a convenience wrapper around the C<form> method
+of the L<BS::HTTPD> object.
+
+=cut
+
 sub form(&;@) {
    my ($blk, $formcb) = @_;
+   $curform = { next_field_idx => 1 };
    my $f = capture { $blk->() };
-   o ($HTTPD->form ($f, $formcb));
+   my $thisform = $curform;
+   $curform = undef;
+   my $set_refs = sub {
+      my ($httpd, @args) = @_;
+
+      for (keys %{$thisform->{flds}}) {
+         ${$thisform->{flds}->{$_}} = $httpd->parm ("field$_");
+      }
+
+      $formcb->($httpd, @args);
+   };
+   o ($HTTPD->form ($f, $set_refs));
 }
 
 sub o(*;@) {
@@ -82,6 +125,13 @@ sub o(*;@) {
    } else {
       $$OUT .= join '', @_;
    }
+}
+
+sub entry {
+   my ($ref) = @_;
+   my $idx = $curform->{next_field_idx}++;
+   $curform->{flds}->{$idx} = $ref;
+   o "<input type=\"text\" name=\"field$idx\" value=\"".escapeHTML ($$ref)."\" />";
 }
 
 sub js {

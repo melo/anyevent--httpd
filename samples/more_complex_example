@@ -19,18 +19,19 @@ $httpd->reg_cb (
       o ("<html><body><h1>Editable list:</h1>");
 
       o "<ul>";
-      for my $cur (@list) {
+      for my $cur (sort @list) {
          my $c = $cur;
          my $lnk = $httpd->link ("[delete]", sub { @list = grep { $c ne $_ } @list; });
          o ("<li>".escapeHTML ($c)." ".$lnk."</li>");
       }
       o "</ul>";
 
+      my $new_element;
       form {
-         o '<input type="text" name="newel" /><input type="submit" value="append"/>'
+         entry (\$new_element);
+         o '<input type="submit" value="append"/>'
       } sub {
-        my ($httpd) = @_;
-         push @list, $httpd->parm ("newel");
+         push @list, $new_element;
       };
 
       o "</body></html>";
