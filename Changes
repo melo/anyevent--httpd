@@ -4,6 +4,5 @@ Revision history for BS-HTTPD
 0.02
 	- made it possible to respond to requests asynchronously in C<BS::HTTPD>.
 
-0.01
-	- first preliminary release
-
+0.01 Thu Mar 20 19:53:31 CET 2008
+	- first release
