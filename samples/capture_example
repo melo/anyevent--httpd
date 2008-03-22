@@ -12,25 +12,26 @@ my $t;
 
 $httpd->reg_cb (
    _ => sub {
-      my ($httpd, $url, $headers) = @_;
+      my ($httpd, $req) = @_;
+      set_request ($req);
 
-      $httpd->o (capture {
-         o ("<html><body><h1>Hello World!</h1>");
-         o ("<a href=\"/test\">another test page</a>");
-         o ("</body></html>");
-      });
+      o capture {
+         o "<html><body><h1>Hello World!</h1>";
+         o "<a href=\"/test\">another test page</a>";
+         o "</body></html>";
+      };
 
-      () # !
+      $req->respond;
    },
    _test => sub {
-      my ($httpd, $url, $headers, $respcb) = @_;
+      my ($httpd, $req) = @_;
 
       $t = AnyEvent->timer (after => 2, cb => sub {
          my $o = capture {
-            o ("CPU info:\n\n");
-            o (`cat /proc/cpuinfo`);
+            o "CPU info:\n\n";
+            o `cat /proc/cpuinfo`;
          };
-         $respcb->([200, "ok", { 'Content-Type' => 'text/plain' }, $o]);
+         $req->respond ([200, "ok", { 'Content-Type' => 'text/plain' }, $o]);
       });
 
       'delay'

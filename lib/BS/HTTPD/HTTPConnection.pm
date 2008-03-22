@@ -8,6 +8,27 @@ use BS::HTTPD::TCPConnection;
 
 our @ISA = qw/BS::HTTPD::TCPConnection/;
 
+=head1 NAME
+
+BS::HTTPD::HTTPConnection - A simple HTTP connection for request and response handling
+
+=head1 DESCRIPTION
+
+This class is a helper class for L<BS:HTTPD::HTTPServer> and L<BS::HTTPD>,
+it handles TCP reading and writing as well as parsing and serializing
+http requests.
+
+It has no public interface yet.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2008 Robin Redeker, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
 sub new {
    my $this  = shift;
    my $class = ref($this) || $this;
@@ -24,29 +45,6 @@ sub new {
          }
       }
    );
-
-   #$self->reg_cb (
-   #   request => sub {
-   #      my ($self, $m, $u, $hdr, $cont) = @_;
-   #      warn "REQUEST $m / $u: ".join (',', %$hdr)." [$cont]\n";
-   #      if ($u =~ /test/) {
-   #         $self->response (
-   #            200, "ok", {'Content-type' => 'text/html'},
-   #            "<form method=POST>"
-   #            ."<input type='file' name='bla' /><input type='text' name='test' />"
-   #            ."<input type='submit' /></form>"
-   #         );
-
-   #      } else {
-   #         $self->response (
-   #            200, "ok", {'Content-type' => 'text/html'},
-   #            "<form enctype='multipart/form-data' method=POST>"
-   #            ."<input type='file' name='bla' /><input type='text' name='test' />"
-   #            ."<input type='submit' /></form>"
-   #         );
-   #      }
-   #   }
-   #);
 
    return $self
 }

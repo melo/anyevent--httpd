@@ -8,7 +8,7 @@ require Exporter;
 
 our @ISA = qw/Exporter/;
 
-our @EXPORT = qw/o alink abutton set_output set_httpd js js_ajaxobj_func capture form entry/;
+our @EXPORT = qw/o alink abutton set_request set_httpd js js_ajaxobj_func capture form entry/;
 
 =head1 NAME
 
@@ -22,36 +22,29 @@ This module mostly exports these functions:
 
 =cut
 
-our $OUT;
-our $HTTPD;
+our $REQ;
 
-=item B<set_output ($ref)>
+=item B<set_request ($ref)>
 
-This function sets the current reference the output generated
-by the functions this module provides is appended to.
+This function sets the current request the output is appended
+to for the response.
 
-If C<$ref> is a scalar reference. Functions like C<BS::HTTPD::Appgets::o>
-will append their arguments to it.
+Use it eg. like this:
 
-If C<$ref> is a callback any output is passe as first argument to the callback.
+   $httpd->reg_cb (
+      _ => sub {
+         my ($httpd, $req) = @_;
+         set_request ($req);
 
-You could for example use this to tie a L<BS::HTTPD> directly to the
-output:
+         o "<html><body><h1>test</h1></body></html>";
 
-   set_output (sub { $httpd->o (@_) });
-
-=cut
-
-sub set_output { $OUT = $_[0] }
-
-=item B<set_httpd ($httpd)>
-
-This function sets the current L<BS::HTTPD> object that should be used
-to genereate forms via the C<form> function. See also the C<form> function below.
+         $req->respond;
+      }
+   );
 
 =cut
 
-sub set_httpd { $HTTPD = $_[0] }
+sub set_request { $REQ = $_[0] }
 
 =item B<capture ($block)>
 
@@ -70,11 +63,11 @@ callback or appended to the reference given to C<set_output>.
 
 sub capture(&@) {
    my ($blk) = @_;
-   my $old = $OUT;
+   my $old = $REQ;
    my $out;
-   $OUT = sub { $out .= $_[0] };
+   $REQ = \$out;
    $blk->();
-   $OUT = $old;
+   $REQ = $old;
    return $out;
 }
 
@@ -108,22 +101,22 @@ sub form(&;@) {
    my $thisform = $curform;
    $curform = undef;
    my $set_refs = sub {
-      my ($httpd, @args) = @_;
+      my ($req) = @_;
 
       for (keys %{$thisform->{flds}}) {
-         ${$thisform->{flds}->{$_}} = $httpd->parm ("field$_");
+         ${$thisform->{flds}->{$_}} = $req->parm ("field$_");
       }
 
-      $formcb->($httpd, @args);
+      $formcb->($req);
    };
-   o ($HTTPD->form ($f, $set_refs));
+   o ($REQ->form ($f, $set_refs));
 }
 
-sub o(*;@) {
-   if (ref $OUT eq 'CODE') {
-      $OUT->(join '', @_);
+sub o {
+   if (ref $REQ ne 'SCALAR') {
+      $REQ->o (join '', @_);
    } else {
-      $$OUT .= join '', @_;
+      $$REQ .= join '', @_;
    }
 }
 

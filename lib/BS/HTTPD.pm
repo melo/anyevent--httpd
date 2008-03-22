@@ -182,12 +182,12 @@ sub handle_app_req {
 
    my $req =
       BS::HTTPD::Request->new (
-         httpd => $self,
-         url   => $url,
-         hdr   => $hdr,
-         parm  => (ref $cont ? $cont : {}),
-         input => (ref $cont ? undef : $cont),
-         resp  => $respcb
+         httpd   => $self,
+         url     => $url,
+         hdr     => $hdr,
+         parm    => (ref $cont ? $cont : {}),
+         content => (ref $cont ? undef : $cont),
+         resp    => $respcb
       );
 
    if ($req->is_form_submit) {
@@ -218,37 +218,19 @@ you can register a callback for that URL like this:
 
    $httpd->reg_cb (
       _test_bla => sub {
-         my ($httpd, $url, $headers, $respcb) = @_;
+         my ($httpd, $req) = @_;
 
-         # ...
-
-         [200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]
+         $req->respond ([200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]);
       }
    );
 
 The first argument to such a callback is always the L<BS::HTTPD> object itself.
-The second argument (C<$url>) is the L<URI::URL> object of the request URL, the
-third argument (C<$headers>) are the HTTP headers as hashreference of array
-references.
-
-The C<$respcb> argument is a callback that you can call with the values that
-you would normally return from the callback. It will then generate a response
-and send it back as response to the request. Take care that you return the
-string C<'delay'> from the event if you want to handle it later.
-See also the C<delayed_example> in the C<samples/> directory.
+The second argument (C<$req>) is the L<BS::HTTPD::Request> object for this
+request. It can be used to get the (possible) form parameters for this
+request or the transmitted content and respond to the request.
 
 Also every request also emits the C<request> event, with the same arguments and semantics,
 you can use this to implement your own request multiplexing.
-
-The return value of these event callbacks are searched for array or hash references.
-The first callback that returned some response (a non-empty list) determines what
-the server will respond to the HTTP useragent.
-
-If the return value was an array reference it's elements have the following semantics:
-
-Alternatively you can fill the response via the C<o> method which will append
-any strings it gets as argument to the response. The content type of a
-response constructed by C<o> will be C<text/html>.
 
 =head1 CACHING
 

@@ -7,16 +7,16 @@ use BS::HTTPD::Appgets /./;
 my $cvar = AnyEvent->condvar;
 
 my $httpd = BS::HTTPD->new (port => 9090);
-BS::HTTPD::Appgets::set_appsrv ($httpd);
 
 $httpd->reg_cb (
    _ => sub {
-      my ($httpd, $url, $headers) = @_;
+      my ($httpd, $req) = @_;
+      set_request ($req);
 
-      o ("<html>");
+      o "<html>";
       js ($BS::HTTPD::Appgets::JSON_JS);
-      js_ajaxobj_func ("newajax");
-      o ("<body><h1>An AJAX example</h1>");
+      js_ajaxobj_func "newajax";
+      o "<body><h1>An AJAX example</h1>";
       js (<<'JS');
          function apply_content (aj, content) {
             var val = eval ("(" + content + ")");
@@ -30,18 +30,19 @@ $httpd->reg_cb (
             }));
          }
 JS
-      o ('<form><input id="testinput" type="text" name="rot13code" /></form><br />');
-      o ('<a style="background: black; color: white;" onclick="poll_backend ();">Click Here to convert to rot13</a><br /><br />');
-      o ('rot13 output: <div style="border: 4px solid red;" id="output"></div>');
-      o ("</body></html>");
-      () # !
+      o '<form><input id="testinput" type="text" name="rot13code" /></form><br />';
+      o '<a style="background: black; color: white;" onclick="poll_backend ();">Click Here to convert to rot13</a><br /><br />';
+      o 'rot13 output: <div style="border: 4px solid red;" id="output"></div>';
+      o "</body></html>";
+      $req->respond;
    },
    _test => sub {
-      my ($httpd, $url, $headers) = @_;
-      my $input = decode_json ($httpd->request_input ());
+      my ($httpd, $req) = @_;
+      set_request ($req);
+      my $input = decode_json ($req->content);
       $input->{input_content} =~ y/A-Za-z/N-ZA-Mn-za-m/;
       o (encode_json ({output_rot13 => $input->{input_content}}));
-      () # !
+      $req->respond;
    },
 );
 

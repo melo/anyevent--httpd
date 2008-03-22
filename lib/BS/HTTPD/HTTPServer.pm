@@ -6,6 +6,26 @@ no warnings;
 use BS::HTTPD::TCPListener;
 use BS::HTTPD::HTTPConnection;
 
+=head1 NAME
+
+BS::HTTPD::HTTPServer - A simple and plain http server
+
+=head1 DESCRIPTION
+
+This class handles incoming TCP connections for HTTP clients.
+It's used by L<BS::HTTPD> to do it's job.
+
+It has no public interface yet.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2008 Robin Redeker, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
 our @ISA = qw/BS::HTTPD::TCPListener/;
 
 sub new {

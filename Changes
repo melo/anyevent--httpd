@@ -2,6 +2,7 @@ Revision history for BS-HTTPD
 
 
 0.02
+	- rewrote the module API to be more "async"
 	- made it possible to respond to requests asynchronously in C<BS::HTTPD>.
 	- added lots of example scripts
 

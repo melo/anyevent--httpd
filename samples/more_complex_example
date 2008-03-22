@@ -12,19 +12,10 @@ my @list = qw/Apples <this> Other things/;
 
 $httpd->reg_cb (
    _ => sub {
-      my ($httpd, $url, $headers) = @_;
-      set_output (sub { $httpd->o (@_) });
-      set_httpd ($httpd);
+      my ($httpd, $req) = @_;
+      set_request ($req);
 
-      o ("<html><body><h1>Editable list:</h1>");
-
-      o "<ul>";
-      for my $cur (sort @list) {
-         my $c = $cur;
-         my $lnk = $httpd->link ("[delete]", sub { @list = grep { $c ne $_ } @list; });
-         o ("<li>".escapeHTML ($c)." ".$lnk."</li>");
-      }
-      o "</ul>";
+      o "<html><body><h1>Editable list:</h1>";
 
       my $new_element;
       form {
@@ -34,9 +25,17 @@ $httpd->reg_cb (
          push @list, $new_element;
       };
 
+      o "<ul>";
+      for my $cur (sort @list) {
+         my $c = $cur;
+         my $lnk = $req->link ("[delete]", sub { @list = grep { $c ne $_ } @list; });
+         o "<li>".escapeHTML ($c)." ".$lnk."</li>";
+      }
+      o "</ul>";
+
       o "</body></html>";
 
-      () # !
+      $req->respond;
    }
 );
 
