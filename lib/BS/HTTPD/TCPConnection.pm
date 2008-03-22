@@ -12,6 +12,25 @@ use Socket qw/IPPROTO_TCP TCP_NODELAY/;
 use BS::Event;
 our @ISA = qw/BS::Event/;
 
+=head1 NAME
+
+BS::HTTPD::TCPConnection - This class handles basic TCP input/output
+
+=head1 DESCRIPTION
+
+This class is a helper class for L<BS:HTTPD::HTTPConnection>.
+
+It has no public interface yet.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2008 Robin Redeker, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
 sub new {
    my $this = shift;
    my $class = ref($this) || $this;

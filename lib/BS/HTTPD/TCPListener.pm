@@ -8,6 +8,27 @@ use BS::HTTPD::TCPConnection;
 
 our @ISA = qw/BS::Event/;
 
+=head1 NAME
+
+BS::HTTPD::TCPListener - A TCP listener
+
+=head1 DESCRIPTION
+
+This class handles new TCP connections for L<BS::HTTPD::HTTPServer>.
+
+It has no public interface yet.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2008 Robin Redeker, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+
+
 sub new {
    my $this = shift;
    my $class = ref($this) || $this;

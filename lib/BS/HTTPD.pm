@@ -93,6 +93,19 @@ For a list of available events see below in the I<EVENTS> section.
 
 =over 4
 
+=item B<new (%args)>
+
+This is the constructor for a L<BS::HTTPD> object.
+The C<%args> hash may contain one of these key/value pairs:
+
+=over 4
+
+=item port => $port
+
+The TCP port the HTTP server will listen on.
+
+=back
+
 =cut
 
 sub new {

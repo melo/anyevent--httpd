@@ -73,6 +73,25 @@ sub capture(&@) {
 
 our $curform;
 
+=item B<o (@strs)>
+
+This function will append all arguments it gets and
+append that to the current output context, which is either
+set by the C<capture> function or C<set_request>.
+
+If it is called outside a C<capture> function it will just forward
+everything to the C<o> method of C<set_request>.
+
+=cut
+
+sub o {
+   if (ref $REQ ne 'SCALAR') {
+      $REQ->o (join '', @_);
+   } else {
+      $$REQ .= join '', @_;
+   }
+}
+
 =item B<form ($block, $callback)>
 
 This function will generate a html form for you, which you can fill
@@ -112,13 +131,15 @@ sub form(&;@) {
    o ($REQ->form ($f, $set_refs));
 }
 
-sub o {
-   if (ref $REQ ne 'SCALAR') {
-      $REQ->o (join '', @_);
-   } else {
-      $$REQ .= join '', @_;
-   }
-}
+=item B<entry ($ref)>
+
+This function will output a text input form field via the C<o> function
+which will set the scalar reference to the value of the text field
+when the form is submitted.
+
+See also the C<form> function above for an example.
+
+=cut
 
 sub entry {
    my ($ref) = @_;
@@ -127,11 +148,44 @@ sub entry {
    o "<input type=\"text\" name=\"field$idx\" value=\"".escapeHTML ($$ref)."\" />";
 }
 
+=item B<js (@strs)>
+
+This function will output the C<@strs> appended enclosed in a HTML
+script tag for javascript.
+
+See also the C<o> function.
+
+=cut
+
 sub js {
    o ("<script type=\"text/javascript\">\n");
    o (@_);
    o ("</script>\n");
 }
+
+=item B<js_ajaxobj_func ($funcname)>
+
+This function will output javascript compatibility cruft code
+to get a XMLHttpRequest object. The javascript function C<$funcname>
+will be declared and can be called in javascript code with the
+content callback as first argument:
+
+   js_ajaxobj_func 'newxhreq';
+
+   js (<<'JS');
+      function response_cb (xh, textcontent) {
+         ...
+      }
+
+      var xh = newxhreq (response_cb);
+      xh.open ("GET", "/", true)
+      xh.send (null);
+   JS
+
+The first argument of the C<response_cb> is the XMLHttpRequest object
+and the second the responseText of the finished request.
+
+=cut
 
 sub js_ajaxobj_func {
    my ($funcname) = @_;
