@@ -33,7 +33,7 @@ This method returns the URL of the current request.
 
 sub url {
    my ($self) = @_;
-   my $url = $self->{cur_url};
+   my $url = $self->{url};
    my $u = URI->new ($url);
    $u->query (undef);
    $u

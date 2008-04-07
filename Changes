@@ -1,5 +1,9 @@
 Revision history for BS-HTTPD
 
+0.03
+        - added submit() function to Appgets
+        - fixed a bug in the url() method of BS::HTTPD::Request where the
+          url wasn't get correctly. resulting in bad form behaviour.
 
 0.02 Sat Mar 22 16:09:55 CET 2008
 	- rewrote the module API to be more "async"

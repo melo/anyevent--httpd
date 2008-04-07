@@ -5,6 +5,7 @@ no warnings;
 
 #use Compress::Zlib; # No need for compression yet
 
+use AnyEvent;
 use Fcntl;
 use POSIX;
 use IO::Socket::INET;
@@ -40,6 +41,18 @@ sub new {
       binmode $self->{socket};
       _set_noblock ($self->{socket});
    }
+
+   $self->reg_cb (
+      before_connect => sub {
+         my ($self) = @_;
+         $self->{local_port} = $self->{socket}->sockport;
+         $self->{local_host} = $self->{socket}->sockhost;
+         $self->{peer_port} = $self->{socket}->sockport;
+         $self->{peer_host} = $self->{socket}->sockhost;
+         $self->unreg_me;
+      }
+   );
+
    $self->init;
    return $self;
 }
@@ -96,6 +109,7 @@ sub connect {
             _set_noblock ($self->{socket});
             $self->start_reader;
             $self->start_writer;
+
             $self->event ('connect');
          }
          delete $self->{cw};

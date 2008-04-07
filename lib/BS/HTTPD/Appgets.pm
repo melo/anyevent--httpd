@@ -8,7 +8,8 @@ require Exporter;
 
 our @ISA = qw/Exporter/;
 
-our @EXPORT = qw/o alink abutton set_request set_httpd js js_ajaxobj_func capture form entry/;
+our @EXPORT = qw/o link abutton set_request set_httpd js 
+                js_ajaxobj_func capture form entry submit/;
 
 =head1 NAME
 
@@ -148,6 +149,17 @@ sub entry {
    o "<input type=\"text\" name=\"field$idx\" value=\"".escapeHTML ($$ref)."\" />";
 }
 
+=item B<submit ($label)>
+
+This function will output a submit button with the label C<$label>.
+
+=cut
+
+sub submit {
+   my ($lbl) = @_;
+   o "<input type=\"submit\" value=\"".escapeHTML ($lbl)."\" />";
+}
+
 =item B<js (@strs)>
 
 This function will output the C<@strs> appended enclosed in a HTML
@@ -212,6 +224,18 @@ function $funcname (content_cb) {
    return xh;
 }
 AJAXFUNC
+}
+
+=item B<link ($label, $callback, $newurl)>
+
+This does exactly the same as the C<link> method of L<BS::HTTPD::Request>
+just uses the current request as object and prints out the link via the C<o>
+function.
+
+=cut
+
+sub link {
+   o ($REQ->link (@_))
 }
 
 =back
