@@ -1,20 +1,20 @@
-package BS::HTTPD::HTTPConnection;
+package AnyEvent::HTTPD::HTTPConnection;
 use feature ':5.10';
 use HTTP::Date;
 use strict;
 no warnings;
 
-use BS::HTTPD::TCPConnection;
+use AnyEvent::HTTPD::TCPConnection;
 
-our @ISA = qw/BS::HTTPD::TCPConnection/;
+our @ISA = qw/AnyEvent::HTTPD::TCPConnection/;
 
 =head1 NAME
 
-BS::HTTPD::HTTPConnection - A simple HTTP connection for request and response handling
+AnyEvent::HTTPD::HTTPConnection - A simple HTTP connection for request and response handling
 
 =head1 DESCRIPTION
 
-This class is a helper class for L<BS:HTTPD::HTTPServer> and L<BS::HTTPD>,
+This class is a helper class for L<AnyEvent:HTTPD::HTTPServer> and L<AnyEvent::HTTPD>,
 it handles TCP reading and writing as well as parsing and serializing
 http requests.
 

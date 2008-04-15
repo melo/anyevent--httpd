@@ -1,20 +1,20 @@
-package BS::HTTPD::TCPListener;
+package AnyEvent::HTTPD::TCPListener;
 use strict;
 use Socket;
 use AnyEvent;
 use IO::Socket::INET;
-use BS::Event;
-use BS::HTTPD::TCPConnection;
+use Object::Event;
+use AnyEvent::HTTPD::TCPConnection;
 
-our @ISA = qw/BS::Event/;
+our @ISA = qw/Object::Event/;
 
 =head1 NAME
 
-BS::HTTPD::TCPListener - A TCP listener
+AnyEvent::HTTPD::TCPListener - A TCP listener
 
 =head1 DESCRIPTION
 
-This class handles new TCP connections for L<BS::HTTPD::HTTPServer>.
+This class handles new TCP connections for L<AnyEvent::HTTPD::HTTPServer>.
 
 It has no public interface yet.
 
@@ -75,7 +75,7 @@ sub foreach_client_except {
 }
 
 sub connection_class {
-   'BS::HTTPD::TCPConnection'
+   'AnyEvent::HTTPD::TCPConnection'
 }
 
 sub spawn_connection {

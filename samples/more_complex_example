@@ -1,12 +1,12 @@
 #!/opt/perl/bin/perl
 use AnyEvent;
-use BS::HTTPD;
-use BS::HTTPD::Appgets;
+use AnyEvent::HTTPD;
+use AnyEvent::HTTPD::Appgets;
 use CGI qw/escapeHTML/;
 
 my $cvar = AnyEvent->condvar;
 
-my $httpd = BS::HTTPD->new (port => 9090);
+my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 my @list = qw/Apples <this> Other things/;
 

@@ -1,12 +1,12 @@
 #!/opt/perl/bin/perl
 use AnyEvent;
 use JSON;
-use BS::HTTPD;
-use BS::HTTPD::Appgets /./;
+use AnyEvent::HTTPD;
+use AnyEvent::HTTPD::Appgets /./;
 
 my $cvar = AnyEvent->condvar;
 
-my $httpd = BS::HTTPD->new (port => 9090);
+my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 $httpd->reg_cb (
    _ => sub {
@@ -14,7 +14,7 @@ $httpd->reg_cb (
       set_request ($req);
 
       o "<html>";
-      js ($BS::HTTPD::Appgets::JSON_JS);
+      js ($AnyEvent::HTTPD::Appgets::JSON_JS);
       js_ajaxobj_func "newajax";
       o "<body><h1>An AJAX example</h1>";
       js (<<'JS');

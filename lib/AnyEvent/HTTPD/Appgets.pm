@@ -1,4 +1,4 @@
-package BS::HTTPD::Appgets;
+package AnyEvent::HTTPD::Appgets;
 use feature ':5.10';
 use strict;
 no warnings;
@@ -13,7 +13,7 @@ our @EXPORT = qw/o link abutton set_request set_httpd js
 
 =head1 NAME
 
-BS::HTTPD::Appgets - Some utility functions for web applications
+AnyEvent::HTTPD::Appgets - Some utility functions for web applications
 
 =head1 EXPORTS
 
@@ -110,7 +110,7 @@ The C<form> function has a special prototype which allows this syntax:
    };
 
 This function is just a convenience wrapper around the C<form> method
-of the L<BS::HTTPD> object.
+of the L<AnyEvent::HTTPD> object.
 
 =cut
 
@@ -228,7 +228,7 @@ AJAXFUNC
 
 =item B<link ($label, $callback, $newurl)>
 
-This does exactly the same as the C<link> method of L<BS::HTTPD::Request>
+This does exactly the same as the C<link> method of L<AnyEvent::HTTPD::Request>
 just uses the current request as object and prints out the link via the C<o>
 function.
 
@@ -244,7 +244,7 @@ sub link {
 
 =over 4
 
-=item B<$BS::HTTPD::Appgets::JSON_JS>
+=item B<$AnyEvent::HTTPD::Appgets::JSON_JS>
 
 This variable contains the javascript source of the JSON serializer
 and deserializer described in L<http://www.JSON.org/js.html>.
@@ -252,7 +252,7 @@ and deserializer described in L<http://www.JSON.org/js.html>.
 You can use this in your application by for example output it via the C<js> function
 like this:
 
-   js ($BS::HTTPD::Appgets::JSON_JS);
+   js ($AnyEvent::HTTPD::Appgets::JSON_JS);
 
 =back
 

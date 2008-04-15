@@ -16,12 +16,12 @@ plan skip_all => "Pod::Coverage $min_pc required for testing POD coverage"
     if $@;
 
 my %SPEC = (
-   'BS::HTTPD' => [qw/alloc_id cleanup handle_app_req start_cleanup/],
-   'BS::HTTPD::Request' => [qw/form_id is_form_submit new/],
-   'BS::HTTPD::HTTPConnection' => [qr/./],
-   'BS::HTTPD::HTTPServer' => [qr/./],
-   'BS::HTTPD::TCPConnection' => [qr/./],
-   'BS::HTTPD::TCPListener' => [qr/./],
+   'AnyEvent::HTTPD' => [qw/alloc_id cleanup handle_app_req start_cleanup/],
+   'AnyEvent::HTTPD::Request' => [qw/form_id is_form_submit new/],
+   'AnyEvent::HTTPD::HTTPConnection' => [qr/./],
+   'AnyEvent::HTTPD::HTTPServer' => [qr/./],
+   'AnyEvent::HTTPD::TCPConnection' => [qr/./],
+   'AnyEvent::HTTPD::TCPListener' => [qr/./],
 );
 
 my $cnt = scalar all_modules ();

@@ -1,4 +1,4 @@
-package BS::HTTPD::TCPConnection;
+package AnyEvent::HTTPD::TCPConnection;
 use feature ':5.10';
 use strict;
 no warnings;
@@ -10,16 +10,16 @@ use Fcntl;
 use POSIX;
 use IO::Socket::INET;
 use Socket qw/IPPROTO_TCP TCP_NODELAY/;
-use BS::Event;
-our @ISA = qw/BS::Event/;
+use Object::Event;
+our @ISA = qw/Object::Event/;
 
 =head1 NAME
 
-BS::HTTPD::TCPConnection - This class handles basic TCP input/output
+AnyEvent::HTTPD::TCPConnection - This class handles basic TCP input/output
 
 =head1 DESCRIPTION
 
-This class is a helper class for L<BS:HTTPD::HTTPConnection>.
+This class is a helper class for L<AnyEvent:HTTPD::HTTPConnection>.
 
 It has no public interface yet.
 

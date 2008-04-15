@@ -1,18 +1,18 @@
-package BS::HTTPD;
+package AnyEvent::HTTPD;
 use feature ':5.10';
 use strict;
 no warnings;
 
 use Scalar::Util qw/weaken/;
 use URI;
-use BS::HTTPD::HTTPServer;
-use BS::HTTPD::Request;
+use AnyEvent::HTTPD::HTTPServer;
+use AnyEvent::HTTPD::Request;
 
-our @ISA = qw/BS::HTTPD::HTTPServer/;
+our @ISA = qw/AnyEvent::HTTPD::HTTPServer/;
 
 =head1 NAME
 
-BS::HTTPD - A simple lightweight event based web (application) server
+AnyEvent::HTTPD - A simple lightweight event based web (application) server
 
 =head1 VERSION
 
@@ -24,9 +24,9 @@ our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
-    use BS::HTTPD;
+    use AnyEvent::HTTPD;
 
-    my $httpd = BS::HTTPD->new (port => 9090);
+    my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
     $httpd->reg_cb (
        _ => sub {
@@ -57,15 +57,11 @@ It's HTTP implementation is a bit hacky, so before using this module make sure
 it works for you and the expected deployment. Feel free to improve the HTTP support
 and send in patches!
 
-I mainly wrote this module to provide a HTTP interface in L<BS>. However,
-it doesn't depend on L<BS> and it can be used to extend any application
-with a (simple) web interface.
-
 The documentation is currently only the source code, but next versions of
 this module will be better documented hopefully. See also the C<samples/> directory
-in the L<BS::HTTPD> distribution for basic starting points.
+in the L<AnyEvent::HTTPD> distribution for basic starting points.
 
-L<BS::HTTPD> even comes with some basic AJAX framework/helper.
+L<AnyEvent::HTTPD> even comes with some basic AJAX framework/helper.
 
 =head1 FEATURES
 
@@ -75,7 +71,7 @@ L<BS::HTTPD> even comes with some basic AJAX framework/helper.
 
 =item * processing of C<x-www-form-urlencoded> and C<multipart/form-data> encoded form parameters
 
-=item * ajax helper and javascript output functions in L<BS::HTTPD::Appgets>
+=item * ajax helper and javascript output functions in L<AnyEvent::HTTPD::Appgets>
 
 =item * support for chunked encoding output to the HTTP client
 
@@ -83,11 +79,11 @@ L<BS::HTTPD> even comes with some basic AJAX framework/helper.
 
 =head1 METHODS
 
-The L<BS::HTTPD> class inherits directly from L<BS::HTTPD::HTTPServer>
-which inherits the event callback interface from L<BS::Event>.
+The L<AnyEvent::HTTPD> class inherits directly from L<AnyEvent::HTTPD::HTTPServer>
+which inherits the event callback interface from L<Object::Event>.
 
-Event callbacks can be registered via the L<BS::Event> API (see the documentation
-of L<BS::Event> for details).
+Event callbacks can be registered via the L<Object::Event> API (see the documentation
+of L<Object::Event> for details).
 
 For a list of available events see below in the I<EVENTS> section.
 
@@ -95,7 +91,7 @@ For a list of available events see below in the I<EVENTS> section.
 
 =item B<new (%args)>
 
-This is the constructor for a L<BS::HTTPD> object.
+This is the constructor for a L<AnyEvent::HTTPD> object.
 The C<%args> hash may contain one of these key/value pairs:
 
 =over 4
@@ -194,7 +190,7 @@ sub handle_app_req {
    weaken $self;
 
    my $req =
-      BS::HTTPD::Request->new (
+      AnyEvent::HTTPD::Request->new (
          httpd   => $self,
          url     => $url,
          hdr     => $hdr,
@@ -237,8 +233,8 @@ you can register a callback for that URL like this:
       }
    );
 
-The first argument to such a callback is always the L<BS::HTTPD> object itself.
-The second argument (C<$req>) is the L<BS::HTTPD::Request> object for this
+The first argument to such a callback is always the L<AnyEvent::HTTPD> object itself.
+The second argument (C<$req>) is the L<AnyEvent::HTTPD::Request> object for this
 request. It can be used to get the (possible) form parameters for this
 request or the transmitted content and respond to the request.
 
@@ -260,14 +256,14 @@ Robin Redeker, C<< <elmex at ta-sa.org> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-bs-httpd at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=BS-HTTPD>.  I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=AnyEvent-HTTPD>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc BS::HTTPD
+    perldoc AnyEvent::HTTPD
 
 
 You can also look for information at:
@@ -276,19 +272,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=BS-HTTPD>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=AnyEvent-HTTPD>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/BS-HTTPD>
+L<http://annocpan.org/dist/AnyEvent-HTTPD>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/BS-HTTPD>
+L<http://cpanratings.perl.org/d/AnyEvent-HTTPD>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/BS-HTTPD>
+L<http://search.cpan.org/dist/AnyEvent-HTTPD>
 
 =back
 
@@ -306,4 +302,4 @@ under the same terms as Perl itself.
 
 =cut
 
-1; # End of BS::HTTPD
+1; # End of AnyEvent::HTTPD

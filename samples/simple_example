@@ -1,10 +1,10 @@
 #!/opt/perl/bin/perl
 use AnyEvent;
-use BS::HTTPD;
+use AnyEvent::HTTPD;
 
 my $cvar = AnyEvent->condvar;
 
-my $httpd = BS::HTTPD->new (port => 9090);
+my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 $httpd->reg_cb (
    _ => sub {

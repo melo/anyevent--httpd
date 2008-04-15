@@ -1,12 +1,12 @@
 #!/opt/perl/bin/perl
 use strict;
 use AnyEvent;
-use BS::HTTPD;
-use BS::HTTPD::Appgets;
+use AnyEvent::HTTPD;
+use AnyEvent::HTTPD::Appgets;
 
 my $cvar = AnyEvent->condvar;
 
-my $httpd = BS::HTTPD->new (port => 9090);
+my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 my $t;
 

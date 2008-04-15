@@ -1,19 +1,19 @@
-package BS::HTTPD::HTTPServer;
+package AnyEvent::HTTPD::HTTPServer;
 use feature ':5.10';
 use strict;
 no warnings;
 
-use BS::HTTPD::TCPListener;
-use BS::HTTPD::HTTPConnection;
+use AnyEvent::HTTPD::TCPListener;
+use AnyEvent::HTTPD::HTTPConnection;
 
 =head1 NAME
 
-BS::HTTPD::HTTPServer - A simple and plain http server
+AnyEvent::HTTPD::HTTPServer - A simple and plain http server
 
 =head1 DESCRIPTION
 
 This class handles incoming TCP connections for HTTP clients.
-It's used by L<BS::HTTPD> to do it's job.
+It's used by L<AnyEvent::HTTPD> to do it's job.
 
 It has no public interface yet.
 
@@ -26,7 +26,7 @@ under the same terms as Perl itself.
 
 =cut
 
-our @ISA = qw/BS::HTTPD::TCPListener/;
+our @ISA = qw/AnyEvent::HTTPD::TCPListener/;
 
 sub new {
    my $this  = shift;
@@ -45,6 +45,6 @@ sub new {
    return $self
 }
 
-sub connection_class { 'BS::HTTPD::HTTPConnection' }
+sub connection_class { 'AnyEvent::HTTPD::HTTPConnection' }
 
 1;
