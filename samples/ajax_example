@@ -9,7 +9,7 @@ my $cvar = AnyEvent->condvar;
 my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 $httpd->reg_cb (
-   _ => sub {
+   '' => sub {
       my ($httpd, $req) = @_;
       set_request ($req);
 
@@ -36,7 +36,7 @@ JS
       o "</body></html>";
       $req->respond;
    },
-   _test => sub {
+   '/test' => sub {
       my ($httpd, $req) = @_;
       set_request ($req);
       my $input = decode_json ($req->content);

@@ -8,7 +8,7 @@ my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 my $timer;
 $httpd->reg_cb (
-   _ => sub {
+   '' => sub {
       my ($httpd, $req) = @_;
 
       $req->o ("<html><body><h1>Testing return types...</h1>");
@@ -16,7 +16,7 @@ $httpd->reg_cb (
       $req->o ("</body></html>");
       $req->respond;
    },
-   '_image_bshttp.png' => sub {
+   '/image/bshttp.png' => sub {
       my ($httpd, $req) = @_;
 
       $timer = AnyEvent->timer (after => 3, cb => sub {

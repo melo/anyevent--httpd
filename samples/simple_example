@@ -7,7 +7,7 @@ my $cvar = AnyEvent->condvar;
 my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
 $httpd->reg_cb (
-   _ => sub {
+   '/' => sub {
       my ($httpd, $req) = @_;
 
       $req->respond ({ content => ['text/html', <<'CONT']});
@@ -16,7 +16,7 @@ $httpd->reg_cb (
          </body></html>
 CONT
    },
-   _test => sub {
+   '/test' => sub {
       my ($httpd, $req) = @_;
 
       $req->respond ({ content => ['text/html', <<'CONT']});

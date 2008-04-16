@@ -112,7 +112,7 @@ value being the content type and the second the content.
 Here is an example:
 
    $httpd->reg_cb (
-      _image_elmex => sub {
+      '/image/elmex' => sub {
          my ($httpd, $req) = @_;
 
          open IMG, "$ENV{HOME}/media/images/elmex.png"

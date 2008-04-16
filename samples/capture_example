@@ -11,7 +11,7 @@ my $httpd = AnyEvent::HTTPD->new (port => 9090);
 my $t;
 
 $httpd->reg_cb (
-   _ => sub {
+   '' => sub {
       my ($httpd, $req) = @_;
       set_request ($req);
 
@@ -23,7 +23,7 @@ $httpd->reg_cb (
 
       $req->respond;
    },
-   _test => sub {
+   '/test' => sub {
       my ($httpd, $req) = @_;
 
       $t = AnyEvent->timer (after => 2, cb => sub {

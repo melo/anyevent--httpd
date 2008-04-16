@@ -1,5 +1,10 @@
 Revision history for AnyEvent-HTTPD
 
+0.04
+        - changed the API to actually call the events for all path segments
+          of an URL. also removed the ugly '/' => '_' mapping for the path
+          seperators. Sorry for any breakage in your code ;-/
+
 0.03 Tue Apr 15 12:57:10 CEST 2008
         - added submit() function to Appgets
         - fixed a bug in the url() method of AnyEvent::HTTPD::Request where the

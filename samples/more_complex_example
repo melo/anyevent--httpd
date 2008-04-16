@@ -11,7 +11,7 @@ my $httpd = AnyEvent::HTTPD->new (port => 9090);
 my @list = qw/Apples <this> Other things/;
 
 $httpd->reg_cb (
-   _ => sub {
+   '' => sub {
       my ($httpd, $req) = @_;
       set_request ($req);
 

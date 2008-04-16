@@ -29,7 +29,7 @@ our $VERSION = '0.03';
     my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
     $httpd->reg_cb (
-       _ => sub {
+       '/' => sub {
           my ($httpd, $req) = @_;
 
           $req->o ("<html><body><h1>Hello World!</h1>");
@@ -37,7 +37,7 @@ our $VERSION = '0.03';
           $req->o ("</body></html>");
           $req->respond;
        },
-       _test => sub {
+       '/test' => sub {
           my ($httpd, $req) = @_;
 
           $req->o ("<html><body><h1>Test page</h1>");
@@ -46,6 +46,8 @@ our $VERSION = '0.03';
           $req->respond;
        },
     );
+
+    $httpd->run; # making a AnyEvent condition variable would also work
 
 =head1 DESCRIPTION
 
@@ -208,25 +210,61 @@ sub handle_app_req {
       }
    }
 
-   my (@segs) = $url->path_segments;
-   my $ev = join "_", @segs;
-
-   my @res = $self->event ('request' => $req);
-   push @res, $self->event ($ev => $req);
+   $self->event ('request' => $req);
+   my $cururl = '';
+   for my $seg ($url->path_segments) {
+      $cururl .= $seg;
+      $self->event ($cururl => $req);
+      $cururl .= '/';
+   }
 }
+
+=item B<run>
+
+This method is a simplification of the C<AnyEvent> condition variable
+idiom. You can use it instead of writing:
+
+   my $cvar = AnyEvent->condvar;
+   $cvar->wait;
+
+=cut
+
+sub run {
+   my ($self) = @_;
+   $self->{condvar} = AnyEvent->condvar;
+   $self->{condvar}->wait;
+}
+
+=item B<stop>
+
+This will stop the HTTP server and return from the
+C<run> method B<if you started the server via that method!>
+
+=cut
+
+sub stop { $_[0]->{condvar}->broadcast if $_[0]->{condvar} }
 
 =back
 
 =head1 EVENTS
 
 Every request goes to a specific URL. After a (GET or POST) request is
-received the URL is split at the '/' characters and joined again with '_' characters.
-After that the event with the name of the converted URL is invoked, this means that
-if you get a request to the url '/test/bla' the even C<_test_bla> is emitted,
-you can register a callback for that URL like this:
+received the URL's path segments are walked down and for each segment
+a event is generated. An example:
+
+If the URL '/test/bla.jpg' is requestes following events will be generated:
+
+  ''              - the root event of each request
+  '/test'         - the event for the 'test' segment
+  '/test/bla.jpg' - the event for the last segment
+
+To actually handle any request you just have to register a callback for the event
+name with the empty string. To handle all requests in the '/test' directory
+you have to register a callback for the event with the name C<'/test'>.
+Here is an example how to register an event for the example URL above:
 
    $httpd->reg_cb (
-      _test_bla => sub {
+      '/test/bla.jpg' => sub {
          my ($httpd, $req) = @_;
 
          $req->respond ([200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]);
