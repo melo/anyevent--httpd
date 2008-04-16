@@ -18,6 +18,7 @@ $httpd->reg_cb (
    },
    '/image/bshttp.png' => sub {
       my ($httpd, $req) = @_;
+      $httpd->stop_request;
 
       $timer = AnyEvent->timer (after => 3, cb => sub {
          open IMG, 'bshttp.png' or do { $req->respond; return }; # respond without output will

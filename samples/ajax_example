@@ -43,6 +43,7 @@ JS
       $input->{input_content} =~ y/A-Za-z/N-ZA-Mn-za-m/;
       o (encode_json ({output_rot13 => $input->{input_content}}));
       $req->respond;
+      $httpd->stop_request;
    },
 );
 

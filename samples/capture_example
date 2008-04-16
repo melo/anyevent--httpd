@@ -1,10 +1,7 @@
 #!/opt/perl/bin/perl
 use strict;
-use AnyEvent;
 use AnyEvent::HTTPD;
 use AnyEvent::HTTPD::Appgets;
-
-my $cvar = AnyEvent->condvar;
 
 my $httpd = AnyEvent::HTTPD->new (port => 9090);
 
@@ -25,6 +22,7 @@ $httpd->reg_cb (
    },
    '/test' => sub {
       my ($httpd, $req) = @_;
+      $httpd->stop_request;
 
       $t = AnyEvent->timer (after => 2, cb => sub {
          my $o = capture {
@@ -38,4 +36,4 @@ $httpd->reg_cb (
    },
 );
 
-$cvar->wait;
+$httpd->run;

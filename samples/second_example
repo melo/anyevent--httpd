@@ -16,6 +16,8 @@ $httpd->reg_cb (
       $req->respond;
    },
    '/image/bshttp.png' => sub {
+      $_[0]->stop_request;
+
       open IMG, 'bshttp.png'
          or do { $_[1]->respond (
                     [404, 'not found', { 'Content-Type' => 'text/plain' }, 'Fail!']);

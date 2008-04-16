@@ -211,12 +211,47 @@ sub handle_app_req {
    }
 
    $self->event ('request' => $req);
+
+   my @evs;
    my $cururl = '';
    for my $seg ($url->path_segments) {
       $cururl .= $seg;
-      $self->event ($cururl => $req);
+      push @evs, $cururl;
       $cururl .= '/';
    }
+
+   $self->{req_stop} = 0;
+   for my $ev (reverse @evs) {
+      $self->event ($ev => $req);
+      last if $self->{req_stop};
+   }
+}
+
+=item B<stop_request>
+
+When the server walks the request URI path upwards you can stop
+the walk by calling this method. Example:
+
+   $httpd->reg_cb (
+      '/test' => sub {
+         my ($httpd, $req) = @_;
+
+         # ...
+
+         $httpd->stop_request; # will prevent that the callback below is called
+      },
+      '' => sub { # this one wont be called by a request to '/test'
+         my ($httpd, $req) = @_;
+
+         # ...
+      }
+   );
+
+=cut
+
+sub stop_request {
+   my ($self) = @_;
+   $self->{req_stop} = 1;
 }
 
 =item B<run>
@@ -254,9 +289,9 @@ a event is generated. An example:
 
 If the URL '/test/bla.jpg' is requestes following events will be generated:
 
-  ''              - the root event of each request
-  '/test'         - the event for the 'test' segment
   '/test/bla.jpg' - the event for the last segment
+  '/test'         - the event for the 'test' segment
+  ''              - the root event of each request
 
 To actually handle any request you just have to register a callback for the event
 name with the empty string. To handle all requests in the '/test' directory
@@ -270,6 +305,8 @@ Here is an example how to register an event for the example URL above:
          $req->respond ([200, 'ok', { 'Content-Type' => 'text/html' }, '<h1>Test</h1>' }]);
       }
    );
+
+See also C<stop_request> about stopping the walk of the path segments.
 
 The first argument to such a callback is always the L<AnyEvent::HTTPD> object itself.
 The second argument (C<$req>) is the L<AnyEvent::HTTPD::Request> object for this
