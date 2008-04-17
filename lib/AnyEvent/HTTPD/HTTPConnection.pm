@@ -1,5 +1,4 @@
 package AnyEvent::HTTPD::HTTPConnection;
-use feature ':5.10';
 use HTTP::Date;
 use strict;
 no warnings;
@@ -54,7 +53,7 @@ sub error {
    my ($self, $code, $msg, $hdr, $content) = @_;
 
    if ($code !~ /^(1\d\d|204|304)$/) {
-      $content //= "$code $msg";
+      unless (defined $content) { $content = "$code $msg" }
       $hdr->{'Content-Type'} = 'text/plain';
    }
 

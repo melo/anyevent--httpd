@@ -1,5 +1,4 @@
 package AnyEvent::HTTPD::Request;
-use feature ':5.10';
 use strict;
 no warnings;
 
@@ -170,7 +169,7 @@ see also the C<url> method above.
 sub link {
    my ($self, $lbl, $cb, $newurl) = @_;
    my $id = $self->{httpd}->alloc_id ($cb);
-   $newurl //= $self->url;
+   unless (defined $newurl) { $newurl = $self->url; }
    '<a href="'.$newurl.'?_afid='.$id.'">'.$lbl.'</a>';
 }
 

@@ -1,5 +1,4 @@
 package AnyEvent::HTTPD::HTTPServer;
-use feature ':5.10';
 use strict;
 no warnings;
 

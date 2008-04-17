@@ -1,5 +1,4 @@
 package AnyEvent::HTTPD::Appgets;
-use feature ':5.10';
 use strict;
 no warnings;
 use CGI qw/escapeHTML/;
