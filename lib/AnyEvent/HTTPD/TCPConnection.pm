@@ -150,7 +150,7 @@ sub start_reader {
 
          if (defined $l) {
             if ($l == 0) {
-               $self->disconnect ("EOF from bummskraut_server '$host:$port'");
+               $self->disconnect ("EOF from '$host:$port'");
             } else {
                $self->{read_buffer} .= $data;
                $self->{compress_stat}->{in_comp} += length $data if $self->{uncompress};
@@ -160,7 +160,7 @@ sub start_reader {
          } else {
             return if $! == EAGAIN();
             $self->disconnect (
-               "Error while reading from bummskraut server '$host:$port': $!"
+               "Error while reading from '$host:$port': $!"
             );
          }
       });
