@@ -5,8 +5,6 @@ README
 t/00-load.t
 t/pod-coverage.t
 t/pod.t
-lib/AnyEvent/HTTPD/TCPConnection.pm
-lib/AnyEvent/HTTPD/TCPListener.pm
 lib/AnyEvent/HTTPD/HTTPServer.pm
 lib/AnyEvent/HTTPD/HTTPConnection.pm
 lib/AnyEvent/HTTPD/Appgets.pm

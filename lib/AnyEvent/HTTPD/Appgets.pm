@@ -131,7 +131,7 @@ sub form(&;@) {
    o ($REQ->form ($f, $set_refs));
 }
 
-=item B<entry ($ref)>
+=item B<entry ($ref, %args)>
 
 This function will output a text input form field via the C<o> function
 which will set the scalar reference to the value of the text field
@@ -139,13 +139,17 @@ when the form is submitted.
 
 See also the C<form> function above for an example.
 
+The C<%args> hash can contain the keys C<size> and C<maxlength> to
+set the size and the maximum length of the entry.
+
 =cut
 
 sub entry {
-   my ($ref) = @_;
+   my ($ref, %args) = @_;
    my $idx = $curform->{next_field_idx}++;
    $curform->{flds}->{$idx} = $ref;
-   o "<input type=\"text\" name=\"field$idx\" value=\"".escapeHTML ($$ref)."\" />";
+   my $add = join " ", map { "$_=\"$args{$_}\"" } keys %args;
+   o "<input type=\"text\" name=\"field$idx\" value=\"".escapeHTML ($$ref)."\" $add />";
 }
 
 =item B<submit ($label)>

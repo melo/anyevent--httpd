@@ -141,6 +141,7 @@ sub new {
       },
       disconnect => sub {
          my ($self, $con) = @_;
+         warn "DISCON: $con\n";
          $con->unreg_cb (delete $self->{conns}->{$con});
       }
    );

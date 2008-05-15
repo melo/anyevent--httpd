@@ -1,11 +1,11 @@
 package AnyEvent::HTTPD::HTTPConnection;
 use HTTP::Date;
+use AnyEvent::Handle;
+use Object::Event;
 use strict;
 no warnings;
 
-use AnyEvent::HTTPD::TCPConnection;
-
-our @ISA = qw/AnyEvent::HTTPD::TCPConnection/;
+our @ISA = qw/Object::Event/;
 
 =head1 NAME
 
@@ -34,16 +34,23 @@ sub new {
    my $self  = { @_ };
    bless $self, $class;
 
-   $self->reg_cb (
-      data => sub { my ($self) = @_; $self->handle_data ($_[1]); },
-      disconnect => sub {
-         my ($self) = @_;
-         # TODO: this is not tested yet:
-         if ($self->{last_header}) {
-            $self->handle_request (@{delete $self->{last_header}}, $self->read_buffer);
+   $self->{hdl} =
+      AnyEvent::Handle->new (
+         fh => $self->{fh},
+         on_eof => sub {
+            $self->event ('disconnect');
+            delete $self->{handles}->{$_[0]}
+         },
+         on_error => sub {
+            warn "ERROR HANDLE: $_[0]: $!\n";
+         },
+         on_read => sub {
+            $self->{rbuf} .= $_[0]->rbuf;
+            $_[0]->rbuf = '';
+            $self->handle_data (\$self->{rbuf});
+            1
          }
-      }
-   );
+      );
 
    return $self
 }
@@ -62,7 +69,7 @@ sub error {
 
 sub response {
    my ($self, $code, $msg, $hdr, $content) = @_;
-   my $res = "HTTP/1.1 $code $msg\015\012";
+   my $res = "HTTP/1.0 $code $msg\015\012";
    $hdr->{'Expires'} = $hdr->{'Date'} = time2str time;
    $hdr->{'Cache-Control'} = "max-age=0";
 
@@ -89,6 +96,11 @@ sub response {
    if ($self->{chunked}) {
       $self->chunk ($content);
    }
+
+   $self->{hdl}->on_drain (sub {
+      warn "DRAIN $self->{hdl}\n";
+      $self->do_disconnect;
+   });
 }
 
 sub chunk {
@@ -278,6 +290,19 @@ sub handle_data {
          }
       }
    }
+}
+
+sub write_data {
+   my ($self, $data) = @_;
+   warn "WRITE $self->{hdl}\n";
+   $self->{hdl}->push_write ($data);
+}
+
+sub do_disconnect {
+   my ($self) = @_;
+   $self->{hdl}->fh->close;
+   delete $self->{hdl};
+   $self->event ('disconnect');
 }
 
 1;

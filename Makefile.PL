@@ -10,6 +10,7 @@ WriteMakefile(
     LICENSE             => 'perl',
     PL_FILES            => {},
     PREREQ_PM => {
+        'AnyEvent'       => 0,
         'Test::More'     => 0,
         'HTTP::Date'     => 0,
         'Object::Event'  => 0,

@@ -20,8 +20,6 @@ my %SPEC = (
    'AnyEvent::HTTPD::Request' => [qw/form_id is_form_submit new/],
    'AnyEvent::HTTPD::HTTPConnection' => [qr/./],
    'AnyEvent::HTTPD::HTTPServer' => [qr/./],
-   'AnyEvent::HTTPD::TCPConnection' => [qr/./],
-   'AnyEvent::HTTPD::TCPListener' => [qr/./],
 );
 
 my $cnt = scalar all_modules ();

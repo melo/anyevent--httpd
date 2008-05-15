@@ -2,8 +2,14 @@ package AnyEvent::HTTPD::HTTPServer;
 use strict;
 no warnings;
 
-use AnyEvent::HTTPD::TCPListener;
+use IO::Socket::INET;
+use Object::Event;
+use AnyEvent::Handle;
+use AnyEvent::Util;
+
 use AnyEvent::HTTPD::HTTPConnection;
+
+our @ISA = qw/Object::Event/;
 
 =head1 NAME
 
@@ -25,25 +31,41 @@ under the same terms as Perl itself.
 
 =cut
 
-our @ISA = qw/AnyEvent::HTTPD::TCPListener/;
-
 sub new {
    my $this  = shift;
    my $class = ref($this) || $this;
-   my $self = $class->SUPER::new (@_);
+   my $self  = { @_ };
+   bless $self, $class;
 
-   $self->reg_cb (
-      connect => sub {
-         my ($list, $cl) = @_;
-      },
-      disconnect => sub {
-         my ($list, $cl) = @_;
-      }
-   );
+   my $sock =
+      $self->{sock} =
+         IO::Socket::INET->new (
+            Listen => 10,
+            LocalPort => $self->{port},
+            ReuseAddr => 1,
+            Blocking => 0
+         );
+
+   $sock or die "Couldn't create listening socket: $!";
+
+   $self->{lw} = AnyEvent::Util::listen ($sock, sub {
+      my ($sock) = @_;
+
+      my $htc = AnyEvent::HTTPD::HTTPConnection->new (fh => $sock);
+      $self->{handles}->{$htc} = $htc;
+
+      $htc->reg_cb (disconnect => sub {
+         delete $self->{handles}->{$_[0]};
+         $self->event (disconnect => $_[0])
+      });
+
+      $self->event (connect => $htc);
+
+   }, sub {
+      $self->event (error => $!);
+   });
 
    return $self
 }
-
-sub connection_class { 'AnyEvent::HTTPD::HTTPConnection' }
 
 1;
