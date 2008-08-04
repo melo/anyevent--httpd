@@ -84,7 +84,7 @@ This method will send a response to the request.
 If no C<$res> argument was given eventually accumulated output will be
 send as C<text/html>.
 
-Otherweis C<$res> can be:
+Otherwise C<$res> can be:
 
 =over 4
 

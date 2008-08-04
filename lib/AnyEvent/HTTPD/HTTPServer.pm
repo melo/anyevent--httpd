@@ -5,7 +5,7 @@ no warnings;
 use IO::Socket::INET;
 use Object::Event;
 use AnyEvent::Handle;
-use AnyEvent::Util;
+use AnyEvent::Socket;
 
 use AnyEvent::HTTPD::HTTPConnection;
 
@@ -48,24 +48,30 @@ sub new {
 
    $sock or die "Couldn't create listening socket: $!";
 
-   $self->{lw} = AnyEvent::Util::listen ($sock, sub {
-      my ($sock) = @_;
-
-      my $htc = AnyEvent::HTTPD::HTTPConnection->new (fh => $sock);
-      $self->{handles}->{$htc} = $htc;
-
-      $htc->reg_cb (disconnect => sub {
-         delete $self->{handles}->{$_[0]};
-         $self->event (disconnect => $_[0])
-      });
-
-      $self->event (connect => $htc);
-
-   }, sub {
-      $self->event (error => $!);
-   });
+   tcp_server undef, $self->{port}, sub {
+      my ($fh) = @_;
+      unless ($fh) {
+         $self->event (error => "couldn't accept client: $!");
+         return;
+      }
+      $self->accept_connection ($fh);
+   };
 
    return $self
+}
+
+sub accept_connection {
+   my ($self, $fh) = @_;
+
+   my $htc = AnyEvent::HTTPD::HTTPConnection->new (fh => $fh);
+   $self->{handles}->{$htc} = $htc;
+
+   $htc->reg_cb (disconnect => sub {
+      delete $self->{handles}->{$_[0]};
+      $self->event (disconnect => $_[0])
+   });
+
+   $self->event (connect => $htc);
 }
 
 1;
