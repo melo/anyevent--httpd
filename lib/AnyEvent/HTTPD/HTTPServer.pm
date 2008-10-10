@@ -2,7 +2,6 @@ package AnyEvent::HTTPD::HTTPServer;
 use strict;
 no warnings;
 
-use IO::Socket::INET;
 use Object::Event;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -36,17 +35,6 @@ sub new {
    my $class = ref($this) || $this;
    my $self  = { @_ };
    bless $self, $class;
-
-   my $sock =
-      $self->{sock} =
-         IO::Socket::INET->new (
-            Listen => 10,
-            LocalPort => $self->{port},
-            ReuseAddr => 1,
-            Blocking => 0
-         );
-
-   $sock or die "Couldn't create listening socket: $!";
 
    tcp_server undef, $self->{port}, sub {
       my ($fh) = @_;

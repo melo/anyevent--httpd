@@ -1,4 +1,5 @@
 package AnyEvent::HTTPD::HTTPConnection;
+use IO::Handle;
 use HTTP::Date;
 use AnyEvent::Handle;
 use Object::Event;
@@ -98,7 +99,7 @@ sub response {
    }
 
    $self->{hdl}->on_drain (sub {
-      warn "DRAIN $self->{hdl}\n";
+      #warn "DRAIN $self->{hdl}\n";
       $self->do_disconnect;
    });
 }
@@ -140,12 +141,12 @@ sub _parse_headers {
    my $hdr;
 
    while ($header =~ /\G
-      (?<header>[^:\000-\040]+) : [\011\040]* 
-         (?<cont> (?:[^\015\012]+|\015\012[\011\040])* )
+      ([^:\000-\040]+) : [\011\040]* 
+         ((?:[^\015\012]+|\015\012[\011\040])* )
          \015\012
       /sgx) {
 
-      $hdr->{$+{header}} .= ",$+{cont}"
+      $hdr->{$1} .= ",$2"
    }
    for (keys %$hdr) { $hdr->{$_} = substr $hdr->{$_}, 1; }
    $hdr
@@ -171,11 +172,11 @@ sub decode_multipart {
 
    while ($cont =~ s/
       ^--\Q$boundary\E              \015\012
-      (?<header> (?:[^\015\012]+\015\012)* ) \015\012
-      (?<cont>.*?) \015\012
-      (--\Q$boundary\E (?<end>--)?  \015\012)
+      ((?:[^\015\012]+\015\012)* ) \015\012
+      (.*?) \015\012
+      (--\Q$boundary\E (--)?  \015\012)
       /\3/xs) {
-      my ($h, $c, $e) = ($+{header}, $+{cont}, $+{end});
+      my ($h, $c, $e) = ($1, $2, $3);
 
       if (my (@p) = $self->decode_part ($h, $c)) {
          push @{$parts->{$p[0]}}, [$p[1], $p[2], $p[3]];
@@ -262,10 +263,10 @@ sub handle_data {
       }
    } else {
       if ($$rbuf =~ s/^
-             (?<method>\S+) \040 (?<uri>\S+) \040 HTTP\/(?<ver> \d+\.\d+ ) \015\012
-             (?<headers> (?:[^\015]+\015\012)* ) \015\012//sx) {
+             (\S+) \040 (\S+) \040 HTTP\/(\d+\.\d+ ) \015\012
+             ((?:[^\015]+\015\012)* ) \015\012//sx) {
 
-         my ($m, $u, $h) = ($+{method},$+{uri},$+{headers});
+         my ($m, $u, $h) = ($1,$2,$4);
          my $hdr = {};
 
          if ($m ne 'GET' && $m ne 'HEAD' && $m ne 'POST') {
@@ -273,14 +274,14 @@ sub handle_data {
             return;
          }
 
-         if ($+{ver} >= 2) {
+         if ($3 >= 2) {
             $self->error (506, "http protocol version not supported");
             return;
          }
 
          $hdr = _parse_headers ($h);
 
-         $self->{last_header} = [$+{method}, $+{uri}, $hdr];
+         $self->{last_header} = [$m, $u, $hdr];
 
          if (defined $hdr->{'Content-Length'}) {
             $self->{content_len} = $hdr->{'Content-Length'};
@@ -294,7 +295,7 @@ sub handle_data {
 
 sub write_data {
    my ($self, $data) = @_;
-   warn "WRITE $self->{hdl}\n";
+   #warn "WRITE $self->{hdl}\n";
    $self->{hdl}->push_write ($data);
 }
 
