@@ -145,9 +145,11 @@ sub new {
       }
    );
 
-   $self->{max_data} //= 10;
-   $self->{cleanup_interval} //= 60;
-   $self->{state} //= {};
+   $self->{max_data} 
+      = defined $self->{max_data} ? $self->{max_data} : 10;
+   $self->{cleanup_interval}
+      = defined $self->{cleanup_interval} ? $self->{cleanup_interval} : 60;
+   $self->{state} ||= {};
 
    return $self
 }
