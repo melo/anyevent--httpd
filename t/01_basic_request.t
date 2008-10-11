@@ -12,6 +12,19 @@ my $req_url2;
 my $req_method;
 my $content;
 
+my @tests = (
+  {
+    request => [ \&http_get, 'http://127.0.0.1:19090/test' ],
+    result  => sub {
+      is($req_url,  "/test", "the path of the request URL was ok");
+      is($req_url2, "/test", "the path of the second request URL was ok");
+      is($req_method, 'GET', 'Correct method used');
+      is($_[0], 'Test response', "the response text was ok");
+    },
+  },
+);
+
+
 $h->reg_cb (
    '' => sub {
       my ($httpd, $req) = @_;
@@ -25,16 +38,27 @@ $h->reg_cb (
    },
 );
 
-my $t = AnyEvent->timer (after => 0.5, cb => sub {
-  http_get "http://127.0.0.1:19090/test", sub {
-    $content = $_[0];
-    $h->stop;
-  };
-});
-
+my $t = AnyEvent->timer (after => 0.5, cb => \&run_next_test);
 $h->run;
 
-is($req_url,  "/test", "the path of the request URL was ok");
-is($req_url2, "/test", "the path of the second request URL was ok");
-is($req_method, 'GET', 'Correct method used');
-is($content,  'Test response', "the response text was ok");
+my $current_test;
+sub run_next_test {
+  $current_test ||= 0;
+
+  my $test = $tests[$current_test++];
+  if (!$test) {
+    $h->stop;
+    return;
+  }
+  
+  my $request = $test->{request};
+  my $result  = $test->{result};
+  
+  my ($f, @args) = @$request;
+    
+  $f->(@args, sub {
+    $result->(@_);
+    run_next_test();
+  });
+}
+
