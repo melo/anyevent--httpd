@@ -50,6 +50,16 @@ sub form_id {
    $id
 }
 
+
+=item B<method>
+
+This method returns the method of the current request.
+
+=cut
+
+sub method { return $_[0]{method} }
+
+
 =item B<form ($content, $callback)>
 
 This method will create a form for you and bind it to the C<$handler>

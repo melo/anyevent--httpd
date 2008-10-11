@@ -130,7 +130,7 @@ sub new {
                if ($meth eq 'GET' or $meth eq 'POST') {
 
                   weaken $con;
-                  $self->handle_app_req ($url, $hdr, $cont, sub {
+                  $self->handle_app_req ($meth, $url, $hdr, $cont, sub {
                      $con->response (@_) if $con;
                   });
                } else {
@@ -188,13 +188,14 @@ sub alloc_id {
 }
 
 sub handle_app_req {
-   my ($self, $url, $hdr, $cont, $respcb) = @_;
+   my ($self, $meth, $url, $hdr, $cont, $respcb) = @_;
 
    weaken $self;
 
    my $req =
       AnyEvent::HTTPD::Request->new (
          httpd   => $self,
+         method  => $meth,
          url     => $url,
          hdr     => $hdr,
          parm    => (ref $cont ? $cont : {}),
