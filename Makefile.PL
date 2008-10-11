@@ -18,6 +18,7 @@ WriteMakefile(
         'URI'            => 0,
         'Fcntl'          => 0,
         'CGI'            => 0,
+        'AnyEvent::HTTP' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz',
                              PREOP => 'pod2text lib/AnyEvent/HTTPD.pm | tee README >$(DISTVNAME)/README; chmod -R u=rwX,go=rX . ;',
