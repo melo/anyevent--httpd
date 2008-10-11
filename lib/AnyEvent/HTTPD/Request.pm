@@ -197,6 +197,35 @@ sub parm {
    return undef;
 }
 
+=item B<param ($key)>
+
+Returns unescaped value for parameter C<$key> or undef.
+
+=cut
+
+sub param {
+   my $self = shift;
+   my $value = $self->parm(@_);
+   return unless defined $value;
+   
+   $value =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
+   return $value;
+}
+
+
+=item B<params>
+
+Returns list of parameter names.
+
+=cut
+
+sub params {
+   my $self = shift;
+   
+   return keys %{$self->{parm} || {}};
+}
+
+
 =item B<content>
 
 Returns the request content or undef if only parameters for a form
